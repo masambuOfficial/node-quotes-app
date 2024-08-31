@@ -1,22 +1,27 @@
-/* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-function QuotesPage({ user }) { // Pass the user object as a prop
+function QuotesPage() {
   const [quotes, setQuotes] = useState([]);
-  const [authors, setAuthors] = useState({}); 
+  const [authors, setAuthors] = useState({});
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
+  // Fetch user from localStorage and set quotes and authors
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
     axios
       .get("http://localhost:4500/quotes")
       .then((response) => {
         const quotesData = response.data;
         setQuotes(quotesData);
 
-        const authorIds = [
-          ...new Set(quotesData.map((quote) => quote.authorId)),
-        ];
+        const authorIds = [...new Set(quotesData.map((quote) => quote.authorId))];
         authorIds.forEach((authorId) => {
           axios
             .get(`http://localhost:4500/authors/${authorId}`)
@@ -36,6 +41,7 @@ function QuotesPage({ user }) { // Pass the user object as a prop
       });
   }, []);
 
+  // Delete a quote
   const deleteQuote = (id) => {
     axios
       .delete(`http://localhost:4500/quotes/${id}`)
@@ -47,18 +53,51 @@ function QuotesPage({ user }) { // Pass the user object as a prop
       });
   };
 
+  // Handle Logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/quotes");
+  };
+
   return (
     <div className="relative">
       <div className="fixed top-0 left-0 w-full bg-white z-10 shadow-md">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
           <h1 className="text-5xl font-bold text-gray-900">Quotes</h1>
-          {user?.role === 'EDITOR' && (
+          {!user ? (
             <Link
-              to="/quotes/new"
+              to="/signup"
               className="inline-block bg-blue-500 text-white py-2 px-4 rounded-sm font-semibold hover:bg-white hover:text-blue-500 hover:border hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             >
-              Create New Quote
+              Sign Up
             </Link>
+          ) : (
+            <div className="flex gap-4">
+              {(user.role === "editor" || user.role === "superAdmin") && (
+                <>
+                  <Link
+                    to="/quotes/new"
+                    className="inline-block bg-blue-500 text-white py-2 px-4 rounded-sm font-semibold hover:bg-white hover:text-blue-500 hover:border hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  >
+                    Create New Quote
+                  </Link>
+                  <Link
+                    to="/authors/new"
+                    className="inline-block bg-blue-500 text-white py-2 px-4 rounded-sm font-semibold hover:bg-white hover:text-blue-500 hover:border hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  >
+                    New Author
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="inline-block bg-red-500 text-white py-2 px-4 rounded-sm font-semibold hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -79,7 +118,7 @@ function QuotesPage({ user }) { // Pass the user object as a prop
                     : "Unknown Author"}
                 </p>
                 <div className="flex gap-4">
-                  {user?.role === 'EDITOR' && (
+                  {(user?.role === "editor" || user?.role === "superAdmin") && (
                     <Link
                       to={`/quotes/edit/${quote.id}`}
                       className="bg-yellow-500 text-white px-4 py-1 rounded-sm hover:bg-white hover:text-yellow-500 hover:border hover:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
@@ -87,7 +126,7 @@ function QuotesPage({ user }) { // Pass the user object as a prop
                       Edit
                     </Link>
                   )}
-                  {user?.role === 'ADMIN' && (
+                  {user?.role === "superAdmin" && (
                     <button
                       onClick={() => deleteQuote(quote.id)}
                       className="bg-red-500 text-white px-4 py-1 rounded-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"

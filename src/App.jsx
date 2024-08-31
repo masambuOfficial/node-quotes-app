@@ -15,28 +15,30 @@ function App() {
     setUser(loggedInUser);
   };
 
-  const getRedirectPath = () => {
-    if (!user) return '/login'; // Redirect to login if not logged in
-    if (user.role === 'SUBSCRIBER') return '/';
-    if (user.role === 'EDITOR') return '/authors';
-    return '/'; // Default to quotes page
-  };
-
   return (
     <Router>
       <Routes>
+        {/* This route will render the QuotesPage without any buttons */}
         <Route
           path="/"
-          element={!user ? <Navigate to="/signup" /> : <QuotesPage user={user} />}
+          element={<QuotesPage user={null} />}  // Pass null to hide buttons
         />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        <Route path="/authors" element={user?.role === 'EDITOR' ? <AuthorsPage user={user} /> : <Navigate to="/" />} />
-        <Route path="/quotes/new" element={user?.role === 'EDITOR' ? <QuoteForm /> : <Navigate to="/" />} />
-        <Route path="/quotes/edit/:id" element={user?.role === 'EDITOR' ? <QuoteForm /> : <Navigate to="/" />} />
-        <Route path="/authors/new" element={user?.role === 'EDITOR' ? <AuthorForm /> : <Navigate to="/" />} />
-        <Route path="/authors/edit/:id" element={user?.role === 'EDITOR' ? <AuthorForm /> : <Navigate to="/" />} />
-        <Route path="/users" element={<UserList />} />
+        
+        {/* Quotes page with user context (with buttons based on role) */}
+        <Route 
+          path="/quotes" 
+          element={<QuotesPage user={user} />} 
+        />
+        
+        {/* Additional routes for authors, forms, and admin pages */}
+        <Route path="/authors" element={user?.role === 'editor' || user?.role === 'superAdmin' ? <AuthorsPage user={user} /> : <Navigate to="/" />} />
+        <Route path="/quotes/new" element={user?.role === 'editor' || user?.role === 'superAdmin' ? <QuoteForm /> : <Navigate to="/" />} />
+        <Route path="/quotes/edit/:id" element={user?.role === 'editor' || user?.role === 'superAdmin' ? <QuoteForm /> : <Navigate to="/" />} />
+        <Route path="/authors/new" element={user?.role === 'editor' || user?.role === 'superAdmin' ? <AuthorForm /> : <Navigate to="/" />} />
+        <Route path="/authors/edit/:id" element={user?.role === 'editor' || user?.role === 'superAdmin' ? <AuthorForm /> : <Navigate to="/" />} />
+        <Route path="/users" element={user?.role === 'superAdmin' ? <UserList /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );
