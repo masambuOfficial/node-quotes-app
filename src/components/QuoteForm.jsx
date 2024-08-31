@@ -209,7 +209,6 @@ const QuoteForm = () => {
               type="url"
               value={newAuthorPicture}
               onChange={(e) => setNewAuthorPicture(e.target.value)}
-              required
               placeholder="Enter the picture URL"
             />
           </div>

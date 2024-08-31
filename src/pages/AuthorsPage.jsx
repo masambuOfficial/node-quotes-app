@@ -1,9 +1,9 @@
-// src/pages/AuthorsPage.js
+/* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-function AuthorsPage() {
+function AuthorsPage({ user }) { // Pass the user object as a prop
   const [authors, setAuthors] = useState([]);
 
   useEffect(() => {
@@ -14,12 +14,12 @@ function AuthorsPage() {
           setAuthors(response.data);
         } else {
           console.error("API did not return an array:", response.data);
-          setAuthors([]); // Set to an empty array if the response is not as expected
+          setAuthors([]); 
         }
       })
       .catch((error) => {
         console.error("Error fetching authors:", error);
-        setAuthors([]); // Set to an empty array in case of error
+        setAuthors([]); 
       });
   }, []);
 
@@ -34,12 +34,14 @@ function AuthorsPage() {
       <div className="fixed top-0 left-0 w-full bg-white z-10 shadow-md">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
           <h1 className="text-5xl font-bold text-gray-900">Authors</h1>
-          <Link
-            to="/authors/new"
-            className="inline-block bg-blue-500 text-white py-2 px-4 rounded-sm font-semibold hover:bg-white hover:text-blue-500 hover:border hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
-            Create New Author
-          </Link>
+          {user?.role === 'EDITOR' && (
+            <Link
+              to="/authors/new"
+              className="inline-block bg-blue-500 text-white py-2 px-4 rounded-sm font-semibold hover:bg-white hover:text-blue-500 hover:border hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Create New Author
+            </Link>
+          )}
         </div>
       </div>
 
@@ -62,18 +64,22 @@ function AuthorsPage() {
                   {author.name}
                 </p>
                 <div className="flex gap-2 mt-auto">
-                  <Link
-                    to={`/authors/edit/${author.id}`}
-                    className="bg-yellow-500 text-white px-4 py-1 rounded-sm hover:bg-white hover:text-yellow-500 hover:border hover:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => deleteAuthor(author.id)}
-                    className="bg-red-500 text-white px-4 py-1 rounded-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                  >
-                    Delete
-                  </button>
+                  {user?.role === 'EDITOR' && (
+                    <Link
+                      to={`/authors/edit/${author.id}`}
+                      className="bg-yellow-500 text-white px-4 py-1 rounded-sm hover:bg-white hover:text-yellow-500 hover:border hover:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+                    >
+                      Edit
+                    </Link>
+                  )}
+                  {user?.role === 'ADMIN' && (
+                    <button
+                      onClick={() => deleteAuthor(author.id)}
+                      className="bg-red-500 text-white px-4 py-1 rounded-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             ))
